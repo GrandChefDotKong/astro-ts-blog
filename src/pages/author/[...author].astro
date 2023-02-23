@@ -1,0 +1,40 @@
+---
+import PostCard from "../../components/PostCard.astro";
+import { formatBlogPosts, slugify } from "../../js/utils";
+import MainLayout from "../../layouts/MainLayout.astro";
+
+export async function getStaticPaths() {
+  
+  const allPosts = await Astro.glob("../blog/*.md");
+  const formattedPosts = formatBlogPosts(allPosts);
+  const allAuthors = [...new Set(formattedPosts.map((post) => 
+    post.frontmatter.author).flat()), ]
+
+  return allAuthors.map((author) => {
+    const authorPosts = formattedPosts.filter((post) => 
+      post.frontmatter.author === author);
+    
+    return {
+      params: { author: slugify(author) },
+      props: {
+        authorName: author,
+        posts: authorPosts,
+      }
+    }
+  })
+}
+  const { author } = Astro.params;
+  const { posts, authorName } = Astro.props;
+---
+
+<MainLayout title={author}>
+  <section class="container" aria-label={`Posts About ${author}`}>
+    <h1 class="h1">Posts About <span>{ authorName }</span></h1>
+    <div class="post-conatiner">
+      {
+        posts.map((post) =>
+          <PostCard frontmatter={post.frontmatter} url={post.url} tagType="h2" />)
+      }
+    </div>
+  </section>
+</MainLayout>
